@@ -1,0 +1,12 @@
+{
+	"pdfOutDir": "./output",
+	"pdfFilePrefix": "file_",
+	"svgImgDir": "./images",
+	"pdfSpecifications": {
+		"filePrefix": "authorify_book",
+		"dimensions": {
+			"height": "8.50",
+			"width": "5.50"
+		}
+	}
+}
