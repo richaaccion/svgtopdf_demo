@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "pdftk": "0.0.0-rc.0",
     "svg-to-pdfkit": "^0.1.7"
   }
 }

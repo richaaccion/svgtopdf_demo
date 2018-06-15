@@ -2,54 +2,61 @@ var fs = require('fs'),
 path = require('path'),
 PDFDocument = require('pdfkit'),
 SVGtoPDF = require('svg-to-pdfkit'),
+execCommand = require('./execCommand'),
 config = require('./config/app.config.json');
 
 
 var pdfToSvg = function() {
 }
 
-pdfToSvg.prototype.init = function() {
-	// initialize file names
-	this.svg = ['./images/BizCard_New/21.svg', './images/BizCard_New/22.svg', './images/BizCard_New/23.svg', './images/BizCard_New/24.svg', './images/BizCard_New/25.svg'];
-	this.pdfFilePath = this.getPdfPath();
-
-	this.startConversion();
+pdfToSvg.prototype.init = function(bookName) {
+	this.coverPageFilePath = this.getCoverPageFile(); // path where cover page will be saved.
+	this.bookName = bookName; // predefined ebook to which cover page needs to be appended.
+	this.eBookDir = config.eBookDir; // existing ebook directory where predefined books are saved
+	this.ebookName = this.getEbookName(); // full file path of final ebook
 }
 
 pdfToSvg.instance = null;
 
-pdfToSvg.prototype.startConversion = function() {
+pdfToSvg.prototype.startConversion = function(svgTag) {
 	// create pdf and set write stream
 	this.generatePDF();
 
-	// read svg files
-	this.svg.map((svgImg, idx) => {
-		this.convertToPdf(svgImg, (idx === (this.svg.length -1)) ? (false) : (true));
-	});
+	this.convertToPdf(svgTag, false);
 
 	// close the document
 	this.doc.end();
+
+	// once cover page is created, append it to existing prebook
+	this.appendCoverToBook();
 }
 
-pdfToSvg.prototype.convertToPdf = function(svgFilename, addImgFlag = false) {
-	// check if svg is array or single elemnt
-	var svgData1 = this.readSVG(svgFilename);
+pdfToSvg.prototype.appendCoverToBook = function() {
+	var command = this.getConversionCommand();
+	execCommand.execute(this.getConversionCommand(), (res) => {
+		console.log(res);
+	});
+}
 
-
-	// write to document
-	SVGtoPDF(this.doc, svgData1, 0, 0, {preserveAspectRatio: "true"});
+pdfToSvg.prototype.convertToPdf = function(svgTag, addImgFlag = false) {
+	SVGtoPDF(this.doc, svgTag, 0, 0, {preserveAspectRatio: "true"});
 
 	if (addImgFlag) {
-		console.log("set to true;");
 		this.doc.addPage();	
-	} else {
-		console.log("set to false");
 	}
 }
 
 
-pdfToSvg.prototype.getPdfPath = function() {
-	return path.join(__dirname, config.pdfOutDir, config.pdfFilePrefix + Date.now().toString()+".pdf");
+pdfToSvg.prototype.getCoverPageFile = function() {
+	return path.join(__dirname, config.pdfOutDir, config.coverPagePrefix + Date.now().toString()+".pdf");
+}
+
+pdfToSvg.prototype.getEbookName = function() {
+	return path.join(__dirname, config.pdfOutDir, config.eBookPrefix + Date.now().toString()+".pdf");
+}
+
+pdfToSvg.prototype.getConversionCommand = function() {
+	return "pdftk " + this.coverPageFilePath + " " + path.join(__dirname, this.eBookDir, this.bookName + " cat output " + this.ebookName);
 }
 
 pdfToSvg.prototype.generatePDF = function() {
@@ -64,7 +71,7 @@ pdfToSvg.prototype.generatePDF = function() {
 			},
 			layout: 'portrait', 
 		});
-		stream = fs.createWriteStream(this.pdfFilePath);	
+		stream = fs.createWriteStream(this.coverPageFilePath);	
 
 		stream.on('finish', function() {});
 		this.doc.pipe(stream);	

@@ -1,7 +1,9 @@
 {
 	"pdfOutDir": "./output",
-	"pdfFilePrefix": "file_",
+	"eBookPrefix": "file_",
+	"coverPagePrefix": "cover_",
 	"svgImgDir": "./images",
+	"eBookDir": "./books",
 	"pdfSpecifications": {
 		"filePrefix": "authorify_book",
 		"dimensions": {
