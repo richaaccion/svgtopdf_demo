@@ -95,69 +95,28 @@ pdfToSvg.prototype.readSVG = function(svgFilename) {
 }
 
 var children = [];
+var allowedNodes = ['image', 'text', 'svg', 'circle'];
 
 pdfToSvg.prototype.createCover = function(svgElement, res) {
 	var parser = new domParser();
 
-	var doc = parser.parseFromString(svgElement, "application/xml");
-	console.log(doc);
+	var doc = parser.parseFromString(svgElement, "image/svg+xml");
+	var titleElement = doc.getElementById('title');
+	var authorElement = doc.getElementById('author');
+	var image = doc.getElementById('author_img');
+	var titleFont = titleElement.getAttribute('font-family') || 'courier';
+	var authorFont = authorElement.getAttribute('font-family') || 'courier';
 
-	var svgElem = doc.getElementsByTagName("svg");
-	// traverse through svg element to get child elements:
 
-	getChildren(svgElem[0]);
-	console.log("children started:::---------------------------------- ");
+	doc = new PDFDocument;
+	doc.pipe(fs.createWriteStream(this.getEbookName()));
+	
+	doc.font('/home/richajoshi/backup/smart-agents/image_example/font/font/font/'+titleFont+'.ttf').fontSize(titleElement.getAttribute('font-size') || 14).text(titleElement.innerHTML || 'Demo text', titleElement.getAttribute('x'), titleElement.getAttribute('y'));
+	doc.font('/home/richajoshi/backup/smart-agents/image_example/font/font/font/'+authorFont+'.ttf').fontSize(authorElement.getAttribute('font-size') || 14).text(authorElement.innerHTML || 'Demo text', authorElement.getAttribute('x'), authorElement.getAttribute('y'));
 
-	children.map(function(cNode) {
-		try {
-			console.log("node type: ", cNode.nodeType);
-			console.log("node name: ", cNode.nodeName);
-			console.log("attributes: ", cNode.attributes);
-			console.log("outer html: ", cNode.outerHTML);
-			console.log("text: ", cNode.textContent);
-			console.log("text x: ", cNode.getAttribute('x'));
-			console.log("text y: ", cNode.getAttribute('y'));
-			console.log("text font size: ", cNode.getAttribute('font-size'));
-			console.log("text font family: ", cNode.getAttribute('font-family'));
-			console.log("text font weight: ", cNode.getAttribute('font-weight'));
-		} catch(err) {
-			console.log(err);
-		}
-	});
-	/*svgElem[0].childNodes.map((childNode) => {
-		console.log('-----------------------------------------');
-		console.log(childNode.nodeType);
-		console.log(childNode.nodeName);
-
-		if (childNode.nodeName === "text") {
-			console.log(childNode.childNodes[0].text);	
-		}
-		console.log("child nodes: --> ", childNode.childNodes);
-		console.log(childNode.attributes);
-		console.log(childNode.outerHTML);
-		console.log(childNode.textContent);
-		console.log(childNode);
-		console.log('-----------------------------------------');
-	});*/
-	res.send('dom parser working...');
-
-	/*doc = new PDFDocument;
-	doc.pipe(fs.createWriteStream('output.pdf'));
-
-	doc.fontSize(15).text('Wally Gator !', 50, 50);
-	// Set the paragraph width and align direction
-	doc.text('Wally Gator is a swinging alligator in the swamp. He\'s the greatest percolator when he really starts to romp. There has never been a greater operator in the swamp. See ya later, Wally Gator.', {
-	    width: 410,
-	    align: 'left'
-	});
-
-	doc.font('/home/richajoshi/backup/smart-agents/image_example/font/font/font/Spirax-Regular.ttf')
-	   .fontSize(25)
-	   .text('Some text with an embedded font!', 100, 100)
-
-	doc.image('/home/richajoshi/backup/smart-agents/image_example/icon.jpeg', 50, 150, {width: 300});
-	// PDF Creation logic goes here
-	doc.end();*/
+	var y = 150; // dynamic attribute not workin gyet...
+	doc.image(image.getAttribute('href') || '/home/richajoshi/backup/smart-agents/image_example/icon.jpeg', image.getAttribute('x') || 50, y, {width: image.getAttribute('width') || 50});
+	doc.end();
 }
 
 function getChildren (node) {
@@ -165,9 +124,8 @@ function getChildren (node) {
 		node.childNodes.map(function(childNode) {
 			getChildren(childNode)
 		})
-	} else {
-		// console.log(node.getAttribute('x'));
-		// console.log(node.attributes);
+	} else if (allowedNodes.indexOf(node.nodeName) !== -1) { // push only known elements.. 
+		console.log("no children..");
 		children.push(node);
 	}
 }
