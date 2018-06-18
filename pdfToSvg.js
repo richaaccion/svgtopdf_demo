@@ -3,7 +3,9 @@ path = require('path'),
 PDFDocument = require('pdfkit'),
 SVGtoPDF = require('svg-to-pdfkit'),
 execCommand = require('./execCommand'),
-config = require('./config/app.config.json');
+config = require('./config/app.config.json'),
+domParser = require('dom-parser'),
+atob = require('atob');
 
 
 var pdfToSvg = function() {
@@ -18,7 +20,7 @@ pdfToSvg.prototype.init = function(bookName) {
 
 pdfToSvg.instance = null;
 
-pdfToSvg.prototype.startConversion = function(svgTag) {
+pdfToSvg.prototype.startConversion = function(svgTag, callback) {
 	// create pdf and set write stream
 	this.generatePDF();
 
@@ -28,18 +30,21 @@ pdfToSvg.prototype.startConversion = function(svgTag) {
 	this.doc.end();
 
 	// once cover page is created, append it to existing prebook
-	this.appendCoverToBook();
+	this.appendCoverToBook(callback);
 }
 
-pdfToSvg.prototype.appendCoverToBook = function() {
+pdfToSvg.prototype.appendCoverToBook = function(callback) {
 	var command = this.getConversionCommand();
+	var self = this;
 	execCommand.execute(this.getConversionCommand(), (res) => {
-		console.log(res);
+		callback(self.ebookName);
 	});
 }
 
 pdfToSvg.prototype.convertToPdf = function(svgTag, addImgFlag = false) {
-	SVGtoPDF(this.doc, svgTag, 0, 0, {preserveAspectRatio: "true"});
+	SVGtoPDF(this.doc, svgTag, 0, 0, {preserveAspectRatio: "true", fontCallback: function() {
+		return "sfns_displayregular";
+	}});
 
 	if (addImgFlag) {
 		this.doc.addPage();	
@@ -74,6 +79,7 @@ pdfToSvg.prototype.generatePDF = function() {
 		stream = fs.createWriteStream(this.coverPageFilePath);	
 
 		stream.on('finish', function() {});
+		stream.on('error', function(err) {console.log(err)});
 		this.doc.pipe(stream);	
 	} catch(err) {
 		console.log(err);
@@ -86,6 +92,84 @@ pdfToSvg.prototype.readSVG = function(svgFilename) {
 		return fs.readFileSync(svgFilename).toString();
 	} 
 	return null;
+}
+
+var children = [];
+
+pdfToSvg.prototype.createCover = function(svgElement, res) {
+	var parser = new domParser();
+
+	var doc = parser.parseFromString(svgElement, "application/xml");
+	console.log(doc);
+
+	var svgElem = doc.getElementsByTagName("svg");
+	// traverse through svg element to get child elements:
+
+	getChildren(svgElem[0]);
+	console.log("children started:::---------------------------------- ");
+
+	children.map(function(cNode) {
+		try {
+			console.log("node type: ", cNode.nodeType);
+			console.log("node name: ", cNode.nodeName);
+			console.log("attributes: ", cNode.attributes);
+			console.log("outer html: ", cNode.outerHTML);
+			console.log("text: ", cNode.textContent);
+			console.log("text x: ", cNode.getAttribute('x'));
+			console.log("text y: ", cNode.getAttribute('y'));
+			console.log("text font size: ", cNode.getAttribute('font-size'));
+			console.log("text font family: ", cNode.getAttribute('font-family'));
+			console.log("text font weight: ", cNode.getAttribute('font-weight'));
+		} catch(err) {
+			console.log(err);
+		}
+	});
+	/*svgElem[0].childNodes.map((childNode) => {
+		console.log('-----------------------------------------');
+		console.log(childNode.nodeType);
+		console.log(childNode.nodeName);
+
+		if (childNode.nodeName === "text") {
+			console.log(childNode.childNodes[0].text);	
+		}
+		console.log("child nodes: --> ", childNode.childNodes);
+		console.log(childNode.attributes);
+		console.log(childNode.outerHTML);
+		console.log(childNode.textContent);
+		console.log(childNode);
+		console.log('-----------------------------------------');
+	});*/
+	res.send('dom parser working...');
+
+	/*doc = new PDFDocument;
+	doc.pipe(fs.createWriteStream('output.pdf'));
+
+	doc.fontSize(15).text('Wally Gator !', 50, 50);
+	// Set the paragraph width and align direction
+	doc.text('Wally Gator is a swinging alligator in the swamp. He\'s the greatest percolator when he really starts to romp. There has never been a greater operator in the swamp. See ya later, Wally Gator.', {
+	    width: 410,
+	    align: 'left'
+	});
+
+	doc.font('/home/richajoshi/backup/smart-agents/image_example/font/font/font/Spirax-Regular.ttf')
+	   .fontSize(25)
+	   .text('Some text with an embedded font!', 100, 100)
+
+	doc.image('/home/richajoshi/backup/smart-agents/image_example/icon.jpeg', 50, 150, {width: 300});
+	// PDF Creation logic goes here
+	doc.end();*/
+}
+
+function getChildren (node) {
+	if (node.childNodes && node.childNodes.constructor === Array && node.childNodes.length >= 1) {
+		node.childNodes.map(function(childNode) {
+			getChildren(childNode)
+		})
+	} else {
+		// console.log(node.getAttribute('x'));
+		// console.log(node.attributes);
+		children.push(node);
+	}
 }
 
 // ------------------------------------------------
