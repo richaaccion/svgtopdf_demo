@@ -79,7 +79,7 @@ pdfToSvg.prototype.appendCoverToBook = function(callback) {
 	var command = this.getConversionCommand();
 	var self = this;
 	execCommand.execute(command, (res) => {
-		callback(path.join(this.baseUrl, self.eBookName));
+		callback(url.resolve(this.baseUrl, self.eBookName));
 	});
 }
 

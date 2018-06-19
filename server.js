@@ -47,7 +47,6 @@ app.post('/converttopdf', (req, res) => {
 app.post('/createcover', (req, res) => {
 	pdfToSvg.init("book1.pdf");
 	pdfToSvg.createCover(req, function(createCoverRes){
-		console.log(createCoverRes);
 		res.send((createCoverRes) ? (createCoverRes) : ("error"));
 	});
 });
