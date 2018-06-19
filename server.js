@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var app = express();
 var fs = require('fs');
 var path = require('path');
-var pdfToSvg = require('./pdfToSvg');
+var pdfToSvg = require('./svgToPdf');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
