@@ -1,0 +1,13 @@
+<svg viewBox="0 0 240 300" xmlns="http://www.w3.org/2000/svg">  
+<defs>        
+<style type="text/css">            
+@font-face {                
+font-family: "sfns_displayregular";
+url("https://fonts.googleapis.com/css?family=Spirax") format("truetype"),             
+font-weight: normal;                
+font-style: normal; }        
+</style>    
+</defs><circle cx="10" cy="100" r="10" fill="red" />    
+<image href="/home/richajoshi/backup/node/svgtopdf2/images/image.jpg" x="50" y="120" height="50px" width="50px" />   <text x="10" y="200" font-family="sfns_displayregular" font-size="35">        Courier     </text> 
+<text x="10" y="250" font-family="courier" font-size="35">        Courier    </text>
+</svg>

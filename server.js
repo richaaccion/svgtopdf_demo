@@ -11,6 +11,8 @@ var pdfToSvg = require('./pdfToSvg');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.use(express.static('assets/output'))
+
 app.use(function (req, res, next) {
 
     // Website you wish to allow to connect
@@ -30,7 +32,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-
 app.post('/converttopdf', (req, res) => {
 	pdfToSvg.init("book1.pdf");
 	pdfToSvg.startConversion(req.body.svg, function(response) {
@@ -44,7 +45,11 @@ app.post('/converttopdf', (req, res) => {
 });
 
 app.post('/createcover', (req, res) => {
-	pdfToSvg.createCover(req.body.svg, res);
+	pdfToSvg.init("book1.pdf");
+	pdfToSvg.createCover(req, function(createCoverRes){
+		console.log(createCoverRes);
+		res.send((createCoverRes) ? (createCoverRes) : ("error"));
+	});
 });
 
 

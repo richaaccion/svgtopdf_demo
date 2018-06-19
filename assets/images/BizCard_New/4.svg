@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+
+<!-- Page 4 -->
+<svg x="0" y="0" width="605" height="935" viewBox="0 0 605 935" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+style="display: block;margin-left: auto;margin-right: auto;">
+<defs>
+
+<style type="text/css"><![CDATA[
+
+
+.s1_4{
+font-size: 18.33px;
+font-family: NewBaskervilleStd-Italic_4l6;
+fill: #231F20;
+}
+.s2_4{
+font-size: 18.33px;
+font-family: NewBaskervilleStd-Roman_1kf;
+fill: #231F20;
+}
+.s3_4{
+font-size: 18.33px;
+font-family: BellMTBold_4l8;
+fill: #000000;
+}
+
+]]></style>
+
+</defs>
+<path d="M0,0
+L0,935
+L605,935
+L605,0 Z " 
+fill="#FFFFFF" stroke="none" />
+<text x="271" y="95" dx="0,-1.7,0,0,0,0,0,0" class="s1_4">Ten | 64</text>
+<text x="227" y="127" dx="0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0" class="s2_4">FINDING BUYERS</text>
+<text x="223" y="161" dx="0,-0.7,-0.2,-0.4,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.2,-0.4,-0.2,-0.2,-0.2,-0.2" class="s3_4">Part 3: Negotiations</text>
+<text x="261" y="195" class="s1_4">Eleven | 67</text>
+<text x="184" y="227" dx="0,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.4,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.1,-0.4,-0.1,-0.1,-1,-0.1,-0.1" class="s2_4">BE A POWER NEGOTIATOR</text>
+<text x="260" y="261" dx="0,-1.1,0,0,0,0,0,0,0,0,0" class="s1_4">Twelve | 72</text>
+<text x="120" y="296" dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.3,0,0,-1,0,0,0" class="s2_4">THE DOS AND DON’TS OF NEGOTIATING</text>
+<text x="254" y="330" dx="0,0,0,0,0.5,0,0,0,0,0,0,0,0" class="s1_4">Thirteen | 77</text>
+<text x="214" y="362" class="s2_4">BARGAINING CHIPS</text>
+<text x="254" y="396" dx="0,0,0,0,0.5,0,0,0,0,0,0,0,0" class="s1_4">Fourteen | 80</text>
+<text x="204" y="430" dx="0,0,0,0,0,0,0,0,0,0,0,0,0,-0.5,0,0,0,0,0" class="s2_4">WHY HIRE AN AGENT? </text>
+
+
+<!-- Any embedded fonts defined here -->
+<style type="text/css" ><![CDATA[
+
+@font-face {
+	font-family: BellMTBold_4l8;
+	src: url("fonts/BellMTBold_4l8.woff") format("woff");
+}
+
+@font-face {
+	font-family: NewBaskervilleStd-Roman_1kf;
+	src: url("fonts/NewBaskervilleStd-Roman_1kf.woff") format("woff");
+}
+
+@font-face {
+	font-family: NewBaskervilleStd-Italic_4l6;
+	src: url("fonts/NewBaskervilleStd-Italic_4l6.woff") format("woff");
+}
+
+]]></style>
+
+</svg>

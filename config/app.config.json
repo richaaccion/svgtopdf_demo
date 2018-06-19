@@ -1,9 +1,12 @@
 {
-	"pdfOutDir": "./output",
+	"pdfOutDir": "./assets/output",
 	"eBookPrefix": "file_",
 	"coverPagePrefix": "cover_",
-	"svgImgDir": "./images",
-	"eBookDir": "./books",
+	"svgImgDir": "./assets/images",
+	"defaultImg": "default.jpg",
+	"eBookDir": "./assets/books",
+	"fontDir": "./assets/fonts",
+	"defaultFont": "default",
 	"pdfSpecifications": {
 		"filePrefix": "authorify_book",
 		"dimensions": {
