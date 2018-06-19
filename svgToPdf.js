@@ -96,30 +96,40 @@ pdfToSvg.prototype.getConversionCommand = function() {
 	return "pdftk " + this.coverPageFilePath + " " + path.join(__dirname, this.eBookDir, this.bookName + " cat output " + this.eBookNameFull);
 }
 
-/*var children = [];
-var allowedNodes = ['image', 'text', 'svg', 'circle'];
+var children = [];
+var allowedNodes = ['image', 'text', 'circle'];
 
 function getChildren(node) {
-	console.log(node);
 	if (node.childNodes && node.childNodes.constructor === Array && node.childNodes.length >= 1) {
-		node.childNodes.map(function(childNode) {
-			getChildren(childNode)
-		})
+		// if nodeName is text, do not traverse the object even if childNodes are present.
+		if (node.nodeName === "text") {
+			children.push(node);
+		} else {
+			node.childNodes.map(function(childNode) {
+				getChildren(childNode)
+			})	
+		}
 	} else if (allowedNodes.indexOf(node.nodeName) !== -1) { // push only known elements.. 
-		console.log("no children..");
 		children.push(node);
 	}
-}*/
+}
 
 pdfToSvg.prototype.createCover = function(request, callback) {
 	var svgElement = request.body.svg;
 	this.baseUrl = request.protocol + "://" + request.headers.host;
-	var svgElementDetails = getSvgElements(svgElement);
-	if (svgElementDetails) {
+	// var svgElementDetails = getSvgElements(svgElement);
+	var pdfDoc = new PDFDocument;
+	pdfDoc.pipe(fs.createWriteStream(this.coverPageFilePath));
+	getSvgElements(svgElement, pdfDoc);
+	pdfDoc.end();
+
+	this.appendCoverToBook(callback);
+
+	/*if (svgElementDetails) {
 		this.generateDocument(svgElementDetails, callback);	
 	} else {
 		callback(false);
-	}
+	}*/
 	
 }
 
@@ -139,10 +149,62 @@ pdfToSvg.prototype.insertSvgToPdf = function(pdfDoc, svgElementDetails) {
 	pdfDoc.image(svgElementDetails.imageElement.source, svgElementDetails.imageElement.coordinates[0], svgElementDetails.imageElement.coordinates[1], svgElementDetails.imageElement.dimensions);
 }
 
-function getSvgElements(svgElement) {
+var shapeArr = ["circle", "rect", "polygon"];
+
+function isShape(nodeName) {
+	return shapeArr.indexOf(nodeName) !== -1;
+}
+
+function getSvgElements(svgElement, pdfDoc) {
 	var parser = new domParser();
 	var doc = parser.parseFromString(svgElement, "application/xml");
-	var titleElement = doc.getElementById('title');
+
+	var svgElem = doc.getElementsByTagName("svg");
+	children = [];
+	getChildren(svgElem[0]);
+
+	children.map((node) => {
+		var elemDetails = {
+			xCoordinate: parseInt(node.getAttribute('x') || node.getAttribute('cx')),
+			yCoordinate: parseInt(node.getAttribute('y') || node.getAttribute('cy')),
+			height: parseInt(node.getAttribute('height')) || 10,
+			width: parseInt(node.getAttribute('width')) ||10,
+			text: node.innerHTML,
+			font: getFontFile(node.getAttribute('font-family')) || getFontFile('default')
+		}
+
+		if (node.getAttribute('font-size')) {
+			elemDetails.fontSize = node.getAttribute('font-size');
+		}
+
+		if (isShape(node.nodeName)) {
+			elemDetails.isShape = true;
+			elemDetails.shapeName = node.nodeName;
+
+			if (node.getAttribute('fill')) {
+				elemDetails.fillColor = node.getAttribute('fill');
+			}
+
+			if (node.getAttribute('stroke')) {
+				elemDetails.strokeColor = node.getAttribute('stroke');
+			}
+
+			if (node.getAttribute('stroke-width')) {
+				elemDetails.strokeWidth = parseInt(node.getAttribute('stroke-width'));
+			}
+
+			if (node.getAttribute('r')) {
+				elemDetails.radius = parseInt(node.getAttribute('r'));
+			}
+		}
+
+		fillPdf(elemDetails, pdfDoc);
+	})
+
+
+	
+
+	/*var titleElement = doc.getElementById('title');
 	var authorElement = doc.getElementById('author');
 	var imageElement = doc.getElementById('author_img');
 	var titleFont = titleElement.getAttribute('font-family') || 'default';
@@ -167,12 +229,33 @@ function getSvgElements(svgElement) {
 				coordinates: [parseInt(imageElement.getAttribute('x')) || 50, parseInt(imageElement.getAttribute('y') || 150)],
 				dimensions: {width: parseInt(imageElement.getAttribute('width')) || 50, height: parseInt(imageElement.getAttribute('height')) || 50}
 			}
-		}	
+		}
 	} else {
 		response = false;
 	}
-	
-	return response;
+
+	return response;*/
+}
+
+function fillPdf(elemDetails, pdfDoc) {
+	console.log(elemDetails);
+	if (elemDetails.isShape) {
+		console.log('creating shape...', elemDetails.shapeName);
+		switch(elemDetails.shapeName) {
+			case 'circle':
+				pdfDoc.circle(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.radius).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor || "#FFF", elemDetails.strokeColor);
+				break;
+			case 'rect':
+				pdfDoc.rect(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.height, elemDetails.width).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor || "#FFF", elemDetails.strokeColor);
+				break;
+		}
+		/*if(elemDetails.strokeWidth) {
+			pdfDoc.strokeWidth
+		}*/
+	} else {
+		console.log('creating element... ');
+		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).text(elemDetails.text), elemDetails.xCoordinate, elemDetails.yCoordinate;
+	}
 }
 
 // check if font file is present else return default font file
