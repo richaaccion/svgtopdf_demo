@@ -9,19 +9,19 @@ url = require('url'),
 atob = require('atob');
 
 
-var pdfToSvg = function() {
+var svgToPdf = function() {
 }
 
-pdfToSvg.prototype.init = function(bookName) {
+svgToPdf.prototype.init = function(bookName) {
 	this.coverPageFilePath = this.getCoverPageFile(); // path where cover page will be saved.
 	this.bookName = bookName; // predefined ebook to which cover page needs to be appended.
 	this.eBookDir = config.eBookDir; // existing ebook directory where predefined books are saved
 	this.eBookNameFull = this.getEbookName(); // full file path of final ebook
 }
 
-pdfToSvg.instance = null;
+svgToPdf.instance = null;
 
-/*pdfToSvg.prototype.startConversion = function(svgTag, callback) {
+/*svgToPdf.prototype.startConversion = function(svgTag, callback) {
 	// create pdf and set write stream
 	this.generatePDF();
 
@@ -34,7 +34,7 @@ pdfToSvg.instance = null;
 	this.appendCoverToBook(callback);
 }*/
 
-/*pdfToSvg.prototype.convertToPdf = function(svgTag, addImgFlag = false) {
+/*svgToPdf.prototype.convertToPdf = function(svgTag, addImgFlag = false) {
 	SVGtoPDF(this.doc, svgTag, 0, 0, {preserveAspectRatio: "true", fontCallback: function() {
 		return "sfns_displayregular";
 	}});
@@ -44,7 +44,7 @@ pdfToSvg.instance = null;
 	}
 }*/
 
-/*pdfToSvg.prototype.generatePDF = function() {
+/*svgToPdf.prototype.generatePDF = function() {
 	try {
 		this.doc = new PDFDocument({
 			size: [155, 241],
@@ -67,7 +67,7 @@ pdfToSvg.instance = null;
 	
 }*/
 
-/*pdfToSvg.prototype.readSVG = function(svgFilename) {
+/*svgToPdf.prototype.readSVG = function(svgFilename) {
 	if (fs.existsSync(svgFilename)) {
 		return fs.readFileSync(svgFilename).toString();
 	} 
@@ -75,7 +75,7 @@ pdfToSvg.instance = null;
 }
 */
 
-pdfToSvg.prototype.appendCoverToBook = function(callback) {
+svgToPdf.prototype.appendCoverToBook = function(callback) {
 	var command = this.getConversionCommand();
 	var self = this;
 	execCommand.execute(command, (res) => {
@@ -83,16 +83,16 @@ pdfToSvg.prototype.appendCoverToBook = function(callback) {
 	});
 }
 
-pdfToSvg.prototype.getCoverPageFile = function() {
+svgToPdf.prototype.getCoverPageFile = function() {
 	return path.join(__dirname, config.pdfOutDir, config.coverPagePrefix + Date.now().toString()+".pdf");
 }
 
-pdfToSvg.prototype.getEbookName = function() {
+svgToPdf.prototype.getEbookName = function() {
 	this.eBookName = config.eBookPrefix + Date.now().toString() + ".pdf";
 	return path.join(__dirname, config.pdfOutDir, this.eBookName);
 }
 
-pdfToSvg.prototype.getConversionCommand = function() {
+svgToPdf.prototype.getConversionCommand = function() {
 	return "pdftk " + this.coverPageFilePath + " " + path.join(__dirname, this.eBookDir, this.bookName + " cat output " + this.eBookNameFull);
 }
 
@@ -114,7 +114,7 @@ function getChildren(node) {
 	}
 }
 
-pdfToSvg.prototype.createCover = function(request, callback) {
+svgToPdf.prototype.createCover = function(request, callback) {
 	var svgElement = request.body.svg;
 	this.baseUrl = request.protocol + "://" + request.headers.host;
 	// var svgElementDetails = getSvgElements(svgElement);
@@ -133,9 +133,18 @@ pdfToSvg.prototype.createCover = function(request, callback) {
 	
 }
 
-pdfToSvg.prototype.generateDocument = function(svgElementDetails, callback) {
+svgToPdf.prototype.generateDocument = function(svgElementDetails, callback) {
 	// generate pdf with details
-	var pdfDoc = new PDFDocument;
+	var pdfDoc = new PDFDocument({
+		size: [155, 241],
+		margins : {
+			top: 0, 
+			bottom: 0,
+			left: 0,
+			right: 0
+		},
+		layout: 'portrait', 
+	});
 	pdfDoc.pipe(fs.createWriteStream(this.coverPageFilePath));
 	this.insertSvgToPdf(pdfDoc, svgElementDetails);
 	pdfDoc.end();
@@ -143,7 +152,7 @@ pdfToSvg.prototype.generateDocument = function(svgElementDetails, callback) {
 	this.appendCoverToBook(callback);
 }
 
-pdfToSvg.prototype.insertSvgToPdf = function(pdfDoc, svgElementDetails) {
+svgToPdf.prototype.insertSvgToPdf = function(pdfDoc, svgElementDetails) {
 	pdfDoc.font(svgElementDetails.titleElement.font).fontSize(svgElementDetails.titleElement.fontSize).text(svgElementDetails.titleElement.text), svgElementDetails.titleElement.coordinates[0], svgElementDetails.titleElement.coordinates[1];
 	pdfDoc.font(svgElementDetails.authorElement.font).fontSize(svgElementDetails.authorElement.fontSize).text(svgElementDetails.authorElement.text), svgElementDetails.authorElement.coordinates[0], svgElementDetails.authorElement.coordinates[1];
 	pdfDoc.image(svgElementDetails.imageElement.source, svgElementDetails.imageElement.coordinates[0], svgElementDetails.imageElement.coordinates[1], svgElementDetails.imageElement.dimensions);
@@ -170,20 +179,14 @@ function getSvgElements(svgElement, pdfDoc) {
 			height: parseInt(node.getAttribute('height')) || 10,
 			width: parseInt(node.getAttribute('width')) ||10,
 			text: node.innerHTML,
-			font: getFontFile(node.getAttribute('font-family')) || getFontFile('default')
-		}
-
-		if (node.getAttribute('font-size')) {
-			elemDetails.fontSize = node.getAttribute('font-size');
+			font: getFontFile(node.getAttribute('font-family')) || getFontFile('default'),
+			fontSize: parseInt(node.getAttribute('font-size')) || 15,
+			fillColor: node.getAttribute('fill') || "#000",
 		}
 
 		if (isShape(node.nodeName)) {
-			elemDetails.isShape = true;
+			elemDetails.nodeType = "shape";
 			elemDetails.shapeName = node.nodeName;
-
-			if (node.getAttribute('fill')) {
-				elemDetails.fillColor = node.getAttribute('fill');
-			}
 
 			if (node.getAttribute('stroke')) {
 				elemDetails.strokeColor = node.getAttribute('stroke');
@@ -197,6 +200,13 @@ function getSvgElements(svgElement, pdfDoc) {
 				elemDetails.radius = parseInt(node.getAttribute('r'));
 			}
 		}
+
+		if (node.nodeName === "image") {
+			elemDetails.nodeType = "image";
+			elemDetails.source = node.getAttribute('xlink:href') || node.getAttribute('href') || path.join(config.svgImgDir, config.defaultImg);
+		}
+
+		node.nodeName = node.nodeName || "text";
 
 		fillPdf(elemDetails, pdfDoc);
 	})
@@ -238,23 +248,19 @@ function getSvgElements(svgElement, pdfDoc) {
 }
 
 function fillPdf(elemDetails, pdfDoc) {
-	console.log(elemDetails);
-	if (elemDetails.isShape) {
-		console.log('creating shape...', elemDetails.shapeName);
+	if (elemDetails.nodeType === "shape") {
 		switch(elemDetails.shapeName) {
 			case 'circle':
-				pdfDoc.circle(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.radius).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor || "#FFF", elemDetails.strokeColor);
+				pdfDoc.circle(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.radius).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor);
 				break;
 			case 'rect':
-				pdfDoc.rect(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.height, elemDetails.width).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor || "#FFF", elemDetails.strokeColor);
+				pdfDoc.rect(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.height, elemDetails.width).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor);
 				break;
 		}
-		/*if(elemDetails.strokeWidth) {
-			pdfDoc.strokeWidth
-		}*/
+	} else if(elemDetails.nodeType === "image") {
+		pdfDoc.image(elemDetails.source, elemDetails.xCoordinate, elemDetails.yCoordinate, {width: elemDetails.width, height: elemDetails.height});
 	} else {
-		console.log('creating element... ');
-		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).text(elemDetails.text), elemDetails.xCoordinate, elemDetails.yCoordinate;
+		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).fillColor(elemDetails.fillColor).text(elemDetails.text), elemDetails.xCoordinate, elemDetails.yCoordinate;
 	}
 }
 
@@ -265,11 +271,11 @@ function getFontFile(fontName) {
 
 // ------------------------------------------------
 
-pdfToSvg.getInstance = function(){
+svgToPdf.getInstance = function(){
     if(this.instance === null){
-        this.instance = new pdfToSvg();
+        this.instance = new svgToPdf();
     }
     return this.instance;
 }
 
-module.exports = pdfToSvg.getInstance();
+module.exports = svgToPdf.getInstance();
