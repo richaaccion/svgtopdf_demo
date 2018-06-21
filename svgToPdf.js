@@ -13,17 +13,8 @@ request = require('request');
 var svgToPdf = function() {
 }
 
-var children = [];
+var svgElemArr = [];
 var allowedNodes = ['image', 'text', 'circle', 'rect'];
-
-/*svgToPdf.prototype.init = function(bookName) {
-	this.coverPageFilePath = this.getCoverPageFile(); // path where cover page will be saved.
-	this.bookName = bookName; // predefined ebook to which cover page needs to be appended.
-	this.eBookDir = config.eBookDir; // existing ebook directory where predefined books are saved
-	this.eBookNameFull = this.getEbookName(); // full file path of final ebook
-	this.coverPageName = config.coverPagePrefix + Date.now().toString()+".pdf";
-}*/
-
 
 svgToPdf.prototype.createCover1 = function(req, callback) {
 	var coverPdfName = config.coverPagePrefix + Date.now().toString()+".pdf";
@@ -39,8 +30,6 @@ svgToPdf.prototype.createCover1 = function(req, callback) {
 			callback(url.resolve(baseUrl, coverPdfName));
 		});
 	});
-
-	
 }
 
 svgToPdf.prototype.createEbook1 = function(req, callback) {
@@ -59,23 +48,7 @@ svgToPdf.prototype.createEbook1 = function(req, callback) {
 	});
 }
 
-function writeSvgToPdf(pdfDoc) {
-	return new Promise(function(resolve, reject) {
-		var resolved = 0;
-		children.map((node, index) => {
-			createPdfObject(node).then(function(elemDetails) { // async operation
-				fillPdf(elemDetails, pdfDoc);
-				resolved++;
-				if (resolved === children.length) {
-					pdfDoc.end();
-					resolve();
-				}
-			});
-		});
-	});
-}
-
-
+// will go in library
 function generatePdf(dimensions, pdfFilePath) {
 	return new Promise(function(resolve, reject){
 		var pdfDoc = new PDFDocument({
@@ -87,80 +60,46 @@ function generatePdf(dimensions, pdfFilePath) {
 	});
 }
 
+// will go in library
 function traverseSvgElements(svgElement) {
 	var parser = new domParser();
 	var doc = parser.parseFromString(svgElement, "application/xml");
 
 	var svgElem = doc.getElementsByTagName("svg");
-	children = [];
+	svgElemArr = [];
 	setSvgElemArr(svgElem[0]);
 }
 
-// svgToPdf.instance = null;
-
-svgToPdf.prototype.appendCoverToBook = function(eBookCoverPath, eBookContentPath, baseUrl, callback) {
-	var eBookName = config.eBookPrefix + Date.now().toString() + ".pdf";
-	var eBookPath = path.join(__dirname, config.pdfOutDir, eBookName);
-
-
-	var command = this.getConversionCommand(eBookCoverPath, eBookContentPath, eBookPath);
-	execCommand.execute(command, (res) => {
-		callback(url.resolve(baseUrl, eBookName));
-	});
-}
-
-svgToPdf.prototype.getConversionCommand = function(eBookCoverPath, eBookContentPath, eBookPath) {
-	return "pdftk " + eBookCoverPath + " " + eBookContentPath + " cat output " + eBookPath;
-}
-
-
-/*svgToPdf.prototype.getCoverPageFile = function() {
-	console.log("coverpage name: ", this);
-	return path.join(__dirname, config.pdfOutDir, this.coverPageName);
-}*/
-
-/*svgToPdf.prototype.getEbookName = function() {
-	this.eBookName = config.eBookPrefix + Date.now().toString() + ".pdf";
-	return path.join(__dirname, config.pdfOutDir, this.eBookName);
-}*/
-
-
-
-
-
-
-
-/*svgToPdf.prototype.createEbook = function(request, isCover, callback) {
-	var svgElement = request.body.svg;
-	this.baseUrl = request.protocol + "://" + request.headers.host;
-
-	var sizeArr = (isCover) ? ([796.5, 590.4]) : ([396, 612]);
-	var pdfDoc = new PDFDocument({
-		size: sizeArr,
-		layout: 'portrait', 
-	});
-	pdfDoc.pipe(fs.createWriteStream(this.coverPageFilePath));
-	var self = this;
-	getSvgElements(svgElement, pdfDoc, function() {
-		pdfDoc.end();
-		if (!isCover) {
-			self.appendCoverToBook(callback);
+// will go in library
+function setSvgElemArr(node) {
+	if (node.childNodes && node.childNodes.constructor === Array && node.childNodes.length >= 1) {
+		// if nodeName is text, do not traverse the object even if childNodes are present.
+		if (node.nodeName === "text") {
+			svgElemArr.push(node);
 		} else {
-			callback(url.resolve(self.baseUrl, self.coverPageName));
+			node.childNodes.map(function(childNode) {
+				setSvgElemArr(childNode)
+			})	
 		}
+	} else if (allowedNodes.indexOf(node.nodeName) !== -1) { // push only known elements.. 
+		svgElemArr.push(node);
+	}
+}
+
+function writeSvgToPdf(pdfDoc) {
+	return new Promise(function(resolve, reject) {
+		var resolved = 0;
+		svgElemArr.map((node, index) => {
+			createPdfObject(node).then(function(elemDetails) { // async operation
+				fillPdf(elemDetails, pdfDoc);
+				resolved++;
+				if (resolved === svgElemArr.length) {
+					pdfDoc.end();
+					resolve();
+				}
+			});
+		});
 	});
-}*/
-
-/*svgToPdf.prototype.insertSvgToPdf = function(pdfDoc, svgElementDetails) {
-	pdfDoc.font(svgElementDetails.titleElement.font).fontSize(svgElementDetails.titleElement.fontSize).text(svgElementDetails.titleElement.text), svgElementDetails.titleElement.coordinates[0], svgElementDetails.titleElement.coordinates[1];
-	pdfDoc.font(svgElementDetails.authorElement.font).fontSize(svgElementDetails.authorElement.fontSize).text(svgElementDetails.authorElement.text), svgElementDetails.authorElement.coordinates[0], svgElementDetails.authorElement.coordinates[1];
-	pdfDoc.image(svgElementDetails.imageElement.source, svgElementDetails.imageElement.coordinates[0], svgElementDetails.imageElement.coordinates[1], svgElementDetails.imageElement.dimensions);
-}*/
-
-var shapeArr = ["circle", "rect", "polygon"];
-
-function isShape(nodeName) {
-	return shapeArr.indexOf(nodeName) !== -1;
 }
 
 function createPdfObject(node) {
@@ -208,23 +147,6 @@ function createPdfObject(node) {
 	})
 }
 
-
-
-function setSvgElemArr(node) {
-	if (node.childNodes && node.childNodes.constructor === Array && node.childNodes.length >= 1) {
-		// if nodeName is text, do not traverse the object even if childNodes are present.
-		if (node.nodeName === "text") {
-			children.push(node);
-		} else {
-			node.childNodes.map(function(childNode) {
-				setSvgElemArr(childNode)
-			})	
-		}
-	} else if (allowedNodes.indexOf(node.nodeName) !== -1) { // push only known elements.. 
-		children.push(node);
-	}
-}
-
 function fillPdf(elemDetails, pdfDoc) {
 	if (elemDetails.nodeType === "shape") {
 		switch(elemDetails.shapeName) {
@@ -240,6 +162,27 @@ function fillPdf(elemDetails, pdfDoc) {
 	} else {
 		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).fillColor(elemDetails.fillColor).text(elemDetails.text), elemDetails.xCoordinate, elemDetails.yCoordinate;
 	}
+}
+
+svgToPdf.prototype.appendCoverToBook = function(eBookCoverPath, eBookContentPath, baseUrl, callback) {
+	var eBookName = config.eBookPrefix + Date.now().toString() + ".pdf";
+	var eBookPath = path.join(__dirname, config.pdfOutDir, eBookName);
+
+
+	var command = this.getConversionCommand(eBookCoverPath, eBookContentPath, eBookPath);
+	execCommand.execute(command, (res) => {
+		callback(url.resolve(baseUrl, eBookName));
+	});
+}
+
+svgToPdf.prototype.getConversionCommand = function(eBookCoverPath, eBookContentPath, eBookPath) {
+	return "pdftk " + eBookCoverPath + " " + eBookContentPath + " cat output " + eBookPath;
+}
+
+var shapeArr = ["circle", "rect", "polygon"];
+
+function isShape(nodeName) {
+	return shapeArr.indexOf(nodeName) !== -1;
 }
 
 // check if font file is present else return default font file
