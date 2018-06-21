@@ -1,7 +1,9 @@
 {
 	"pdfOutDir": "./assets/output",
-	"eBookPrefix": "file_",
+	"eBookPrefix": "ebook_",
+	"eBookCoverPrefix": "ebook_cover_",
 	"coverPagePrefix": "cover_",
+	"imagePrefix": "img_",
 	"svgImgDir": "./assets/images",
 	"defaultImg": "default.jpg",
 	"eBookDir": "./assets/books",

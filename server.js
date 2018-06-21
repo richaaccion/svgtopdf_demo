@@ -32,24 +32,31 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.post('/converttopdf', (req, res) => {
+/*app.post('/createebook', (req, res) => {
 	pdfToSvg.init("book1.pdf");
-	pdfToSvg.startConversion(req.body.svg, function(response) {
-		var file = fs.createReadStream(response);
-		var stat = fs.statSync(response);
-		res.setHeader('Content-Length', stat.size);
-		res.setHeader('Content-Type', 'application/pdf');
-		res.setHeader('Content-Disposition', 'attachment; filename=quote.pdf');
-		file.pipe(res);
+	pdfToSvg.createEbook(req, false, function(createEbookRes){
+		res.send((createEbookRes) ? (createEbookRes) : ("error"));
 	});
 });
 
 app.post('/createcover', (req, res) => {
 	pdfToSvg.init("book1.pdf");
-	pdfToSvg.createCover(req, function(createCoverRes){
+	pdfToSvg.createEbook(req, true, function(createCoverRes){
+		res.send((createCoverRes) ? (createCoverRes) : ("error"));
+	});
+});*/
+
+app.post('/createcover', (req, res) => {
+	pdfToSvg.createCover1(req, function(createCoverRes) {
 		res.send((createCoverRes) ? (createCoverRes) : ("error"));
 	});
 });
 
+app.post('/createebook', (req, res) => {
+	console.log("createebook2");
+	pdfToSvg.createEbook1(req, function(createCoverRes){
+		res.send((createCoverRes) ? (createCoverRes) : ("error"));
+	});
+});
 
-app.listen(3002, () => console.log('server started at localhost:3001'));
+app.listen(3002, () => console.log('server started at localhost:3002'));

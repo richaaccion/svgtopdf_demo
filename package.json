@@ -14,6 +14,7 @@
     "dom-parser": "^0.1.5",
     "express": "^4.16.3",
     "pdftk": "0.0.0-rc.0",
+    "request": "^2.87.0",
     "svg-to-pdfkit": "^0.1.7"
   }
 }
