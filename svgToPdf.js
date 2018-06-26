@@ -21,6 +21,7 @@ svgToPdf.prototype.createCover1 = function(req, callback) {
 	var coverPdfPath = path.join(__dirname, config.pdfOutDir, coverPdfName);
 
 	var svgElement = req.body.svg;
+	console.log(svgElement);
 	traverseSvgElements(svgElement);
 
 	generatePdf([796.5, 590.4], coverPdfPath).then(function(pdfDoc){
@@ -38,6 +39,7 @@ svgToPdf.prototype.createEbook1 = function(req, callback) {
 
 	var self = this;
 	var svgElement = req.body.svg;
+	console.log(svgElement);
 	traverseSvgElements(svgElement); // will set all children elements
 	generatePdf([396, 612], eBookCoverPath).then(function(pdfDoc){
 		// extract svg
@@ -91,6 +93,7 @@ function writeSvgToPdf(pdfDoc) {
 		var resolved = 0;
 		svgElemArr.map((node, index) => {
 			createPdfObject(node).then(function(elemDetails) { // async operation
+				console.log("elemDetails-> ", elemDetails);
 				fillPdf(elemDetails, pdfDoc);
 				resolved++;
 				if (resolved === svgElemArr.length) {
@@ -151,10 +154,10 @@ function fillPdf(elemDetails, pdfDoc) {
 	if (elemDetails.nodeType === "shape") {
 		switch(elemDetails.shapeName) {
 			case 'circle':
-				pdfDoc.circle(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.radius).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor);
+				pdfDoc.circle(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.radius).lineWidth((elemDetails.strokeWidth) ? (elemDetails.strokeWidth) : (0)).fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor || "black");
 				break;
 			case 'rect':
-				pdfDoc.rect(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.height, elemDetails.width).fill(elemDetails.fillColor || 'black').fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor);
+				pdfDoc.rect(elemDetails.xCoordinate, elemDetails.yCoordinate, elemDetails.width, elemDetails.height).lineWidth((elemDetails.strokeWidth) ? (elemDetails.strokeWidth) : (0)).fillAndStroke(elemDetails.fillColor, elemDetails.strokeColor || 'black');
 				break;
 		}
 	} else if(elemDetails.nodeType === "image") {

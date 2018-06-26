@@ -14,18 +14,23 @@ var svg = `<svg height="150" width="400">
 </svg>`;
 
 // create document
-var doc = new PDFDocument();
+var doc = new PDFDocument({
+	size: [816, 528],
+	layout: 'portrait'
+});
 
 // create stream
-var stream = fs.createWriteStream('file.pdf');
+var stream = fs.createWriteStream('./assets/output/file.pdf');
 stream.on('finish', function() {
-	console.log(fs.readFileSync('file.pdf'));
+	console.log(fs.readFileSync('./assets/output/file.pdf'));
 })
 doc.pipe(stream);
 
 
-// write to document
-SVGtoPDF(doc, svg, 0, 0);
+doc.rect(0, 0, 396, 612).lineWidth(0).fillAndStroke("yellow", 'black');
+
+// // write to document
+// SVGtoPDF(doc, svg, 0, 0);
 
 // close document
 doc.end();
