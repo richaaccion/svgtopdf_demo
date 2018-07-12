@@ -47,7 +47,7 @@ app.post('/createcover', (req, res) => {
 });*/
 
 app.post('/createcover', (req, res) => {
-	pdfToSvg.createCover1(req, function(createCoverRes) {
+	pdfToSvg.createCover(req, function(createCoverRes) {
 		res.send((createCoverRes) ? (createCoverRes) : ("error"));
 	});
 });

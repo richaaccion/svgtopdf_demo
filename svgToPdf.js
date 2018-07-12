@@ -15,17 +15,20 @@ var svgToPdf = function() {
 
 var svgElemArr = [];
 var allowedNodes = ['image', 'text', 'circle', 'rect'];
+var dpi = 0;
 
-svgToPdf.prototype.createCover1 = function(req, callback) {
+svgToPdf.prototype.createCover = function(req, callback) {
 	var coverPdfName = config.coverPagePrefix + Date.now().toString()+".pdf";
 	var coverPdfPath = path.join(__dirname, config.pdfOutDir, coverPdfName);
+	dpi = req.body.dpi;
 
 	var svgElement = req.body.svg;
-	console.log(svgElement);
 	traverseSvgElements(svgElement);
 
 	generatePdf([796.5, 590.4], coverPdfPath).then(function(pdfDoc){
 		// extract svg tag
+
+		console.log(svgElemArr);
 		writeSvgToPdf(pdfDoc).then(function(){ // traverse through children and write in pdf document
 			var baseUrl = req.protocol + "://" + req.headers.host;
 			callback(url.resolve(baseUrl, coverPdfName));
@@ -39,9 +42,9 @@ svgToPdf.prototype.createEbook1 = function(req, callback) {
 
 	var self = this;
 	var svgElement = req.body.svg;
-	console.log(svgElement);
 	traverseSvgElements(svgElement); // will set all children elements
 	generatePdf([396, 612], eBookCoverPath).then(function(pdfDoc){
+		console.log(svgElemArr);
 		// extract svg
 		writeSvgToPdf(pdfDoc).then(function(){ // traverse through children and write in pdf document
 			var baseUrl = req.protocol + "://" + req.headers.host;
@@ -68,6 +71,7 @@ function traverseSvgElements(svgElement) {
 	var doc = parser.parseFromString(svgElement, "application/xml");
 
 	var svgElem = doc.getElementsByTagName("svg");
+	console.log(svgElem[0].getAttribute("viewBox"));
 	svgElemArr = [];
 	setSvgElemArr(svgElem[0]);
 }
@@ -93,7 +97,6 @@ function writeSvgToPdf(pdfDoc) {
 		var resolved = 0;
 		svgElemArr.map((node, index) => {
 			createPdfObject(node).then(function(elemDetails) { // async operation
-				console.log("elemDetails-> ", elemDetails);
 				fillPdf(elemDetails, pdfDoc);
 				resolved++;
 				if (resolved === svgElemArr.length) {
@@ -108,8 +111,8 @@ function writeSvgToPdf(pdfDoc) {
 function createPdfObject(node) {
 	return new Promise(function(resolve, reject) {
 		var elemDetails = {
-			xCoordinate: parseInt(node.getAttribute('x') || node.getAttribute('cx')),
-			yCoordinate: parseInt(node.getAttribute('y') || node.getAttribute('cy')),
+			xCoordinate: getPointsFromDpi(parseInt(node.getAttribute('x') || node.getAttribute('cx'))),
+			yCoordinate: getPointsFromDpi(parseInt(node.getAttribute('y') || node.getAttribute('cy'))),
 			height: parseInt(node.getAttribute('height')) || 10,
 			width: parseInt(node.getAttribute('width')) ||10,
 			text: node.innerHTML,
@@ -150,6 +153,10 @@ function createPdfObject(node) {
 	})
 }
 
+function getPointsFromDpi(pixelVal) {
+	return (pixelVal / dpi * 72)
+}
+
 function fillPdf(elemDetails, pdfDoc) {
 	if (elemDetails.nodeType === "shape") {
 		switch(elemDetails.shapeName) {
@@ -163,7 +170,7 @@ function fillPdf(elemDetails, pdfDoc) {
 	} else if(elemDetails.nodeType === "image") {
 		pdfDoc.image(elemDetails.source, elemDetails.xCoordinate, elemDetails.yCoordinate, {width: elemDetails.width, height: elemDetails.height, fit: [100, 100]});
 	} else {
-		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).fillColor(elemDetails.fillColor).text(elemDetails.text), elemDetails.xCoordinate, elemDetails.yCoordinate;
+		pdfDoc.font(elemDetails.font).fontSize(elemDetails.fontSize).fillColor(elemDetails.fillColor).text(elemDetails.text, elemDetails.xCoordinate, elemDetails.yCoordinate);
 	}
 }
 
